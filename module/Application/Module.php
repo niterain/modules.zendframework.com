@@ -1,19 +1,29 @@
 <?php
+/**
+ * Zend Framework (http://framework.zend.com/)
+ *
+ * @link      http://github.com/zendframework/ZendSkeletonApplication for the canonical source repository
+ * @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   http://framework.zend.com/license/new-bsd New BSD License
+ */
 
 namespace Application;
 
-use Zend\EventManager\StaticEventManager,
-    Zend\Module\Consumer\AutoloaderProvider;
+use Zend\Mvc\ModuleRouteListener;
 
-class Module implements AutoloaderProvider
+class Module
 {
-    protected $view;
-    protected $viewListener;
-
-    public function init()
+    public function onBootstrap($e)
     {
-        $events = StaticEventManager::getInstance();
-        $events->attach('bootstrap', 'bootstrap', array($this, 'initializeView'), 100);
+        $e->getApplication()->getServiceManager()->get('translator');
+        $eventManager        = $e->getApplication()->getEventManager();
+        $moduleRouteListener = new ModuleRouteListener();
+        $moduleRouteListener->attach($eventManager);
+    }
+
+    public function getConfig()
+    {
+        return include __DIR__ . '/config/module.config.php';
     }
 
     public function getAutoloaderConfig()
@@ -30,51 +40,5 @@ class Module implements AutoloaderProvider
         );
     }
 
-    public function getConfig($env = null)
-    {
-        return include __DIR__ . '/config/module.config.php';
-    }
-    
-    public function initializeView($e)
-    {
-        $app          = $e->getParam('application');
-        $locator      = $app->getLocator();
-        $config       = $e->getParam('config');
-        $view         = $this->getView($app);
-        $viewListener = $this->getViewListener($view, $config);
-        $app->events()->attachAggregate($viewListener);
-        $events       = StaticEventManager::getInstance();
-        $viewListener->registerStaticListeners($events, $locator);
-    }
 
-    protected function getViewListener($view, $config)
-    {
-        if ($this->viewListener instanceof View\Listener) {
-            return $this->viewListener;
-        }
-
-        $viewListener       = new View\Listener($view, $config->layout);
-        $viewListener->setDisplayExceptionsFlag($config->display_exceptions);
-
-        $this->viewListener = $viewListener;
-        return $viewListener;
-    }
-
-    protected function getView($app)
-    {
-        if ($this->view) {
-            return $this->view;
-        }
-
-        $di     = $app->getLocator();
-        $view   = $di->get('view');
-        $url    = $view->plugin('url');
-        $url->setRouter($app->getRouter());
-
-        $view->plugin('headTitle')->setSeparator(' - ')
-                                  ->setAutoEscape(false)
-                                  ->append('ZF2 Modules');
-        $this->view = $view;
-        return $view;
-    }
 }
