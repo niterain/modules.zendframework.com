@@ -24,7 +24,7 @@
                         <div class="span6 module-author">
                             <div class="row-fluid">
                                 <div class="span2">
-                                    <img src="<?php echo $module->getPhotoUrl()?>" alt="<?php echo $module->getOwner()?>">
+                                    <img src="<?php echo $module->getPhotoUrl()?>" alt="<?php echo $module->getOwner()?>" class="avatar">
                                 </div>
                                 <div class="span10">
                                     <strong><?php echo $module->getOwner()?></strong>
@@ -40,7 +40,13 @@
                             </div>
                         </div>
                         <div class="span6">
-                            <strong><?php echo $module->getName()?></strong>
+                            <strong><a href="<?php
+                                            echo
+                                            $this->url('view-module', array(
+                                                    'vendor' => $module->getOwner(),
+                                                    'module' =>  $module->getName(),
+                                                )
+                                            );?>"><?php echo $module->getName()?></a></strong>
                             <p>
                                 <!--<span class="author-label">Version:</span> 1.2.1<br />-->
                                  <span class="author-label">Created:</span> <?php
@@ -61,7 +67,6 @@
                 <div class="row-fluid">
                     <div class="module-description">
                         <div class="span12">
-                            <strong>Description</strong>
                             <p>
                                 <?php echo $module->getDescription()?>
                             </p>
@@ -71,7 +76,7 @@
                 </div>
             </div>
         </div><?php } ?>
-        <?php echo $this->paginationControl($this->repositories, 'Sliding', 'application/index/pagination.phtml', array('query' =>$query)); ?>
+        <?php echo $this->paginationControl($this->repositories, 'Sliding', 'application/index/pagination', array('query' =>$query)); ?>
     </div>
     <div class="span4">
         <div class="sidebar">

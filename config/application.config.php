@@ -4,6 +4,7 @@ require(__DIR__.'/constants.php');
 
 return array(
     'modules' => array(
+        'LfjErrorLayout',
         'ZfcBase',
         'ZfcUser',
         'ScnSocialAuth',
@@ -15,6 +16,7 @@ return array(
 		'User',
         'EdpModuleLayouts',
         'ZfModule',
+        'EdpMarkdown',
     ),
     'module_listener_options' => array(
         'config_glob_paths'    => array(

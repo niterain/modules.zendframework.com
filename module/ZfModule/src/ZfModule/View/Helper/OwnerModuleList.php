@@ -7,7 +7,7 @@ use Zend\View\Model\ViewModel;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
-class NewModule extends AbstractHelper implements ServiceLocatorAwareInterface
+class OwnerModuleList extends AbstractHelper implements ServiceLocatorAwareInterface
 {
     /**
      * $var string template used for view
@@ -34,13 +34,13 @@ class NewModule extends AbstractHelper implements ServiceLocatorAwareInterface
         $sl = $sl->getServiceLocator();
 
         $mapper = $sl->get('zfmodule_mapper_module');
-        $modules = $mapper->findAll(10, 'created_at', 'DESC');
+        $modules = $mapper->findByOwner($options["owner"], 10, 'created_at', 'DESC');
 
         //return $modules;
         $vm = new ViewModel(array(
             'modules' => $modules,
         ));
-        $vm->setTemplate('zf-module/helper/new-module');
+        $vm->setTemplate('zf-module/helper/new-module.phtml');
 
         return $this->getView()->render($vm);
     }

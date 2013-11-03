@@ -10,6 +10,69 @@ class IndexController extends AbstractActionController
 {
     protected $moduleService;
 
+    public function viewAction()
+    {
+        $vendor = $this->params()->fromRoute('vendor', null);
+        $module = $this->params()->fromRoute('module', null);
+
+        $sl = $this->getServiceLocator();
+        $mapper = $sl->get('zfmodule_mapper_module');
+
+        //check if module is existing in database otherwise return 404 page
+        $result = $mapper->findByName($module);
+        if(!$result) {
+            $this->getResponse()->setStatusCode(404);
+            return;
+        }
+
+        $client = $sl->get('EdpGithub\Client');
+        /* @var $cache StorageInterface */
+        $cache = $sl->get('zfmodule_cache');
+
+        $cacheKey = 'module-view-' . $vendor . '-' . $module;
+
+        $repository = json_decode($client->api('repos')->show($vendor, $module));
+        $httpClient = $client->getHttpClient();
+        $response= $httpClient->getResponse();
+        if($response->getStatusCode() == 304 && $cache->hasItem($cacheKey)) {
+            return $cache->getItem($cacheKey);
+        }
+
+        $readme = $client->api('repos')->readme($vendor, $module);
+        $readme = json_decode($readme);
+        $repository = json_decode($client->api('repos')->show($vendor, $module));
+
+        try{
+            $license = $client->api('repos')->content($vendor, $module, 'LICENSE');
+            $license = json_decode($license);
+            $license = base64_decode($license->content);
+        } catch(\Exception $e) {
+            $license = 'No license file found for this Module';
+        }
+
+        try{
+            $composerJson = $client->api('repos')->content($vendor, $module, 'composer.json');
+            $composerConf = json_decode($composerJson);
+            $composerConf = base64_decode($composerConf->content);
+            $composerConf = json_decode($composerConf, true);
+        } catch(\Exception $e) {
+            $composerConf = 'No composer.json file found for this Module';
+        }
+
+        $viewModel = new ViewModel(array(
+            'vendor' => $vendor,
+            'module' => $module,
+            'repository' => $repository,
+            'readme' => base64_decode($readme->content),
+            'composerConf' => $composerConf,
+            'license' => $license,
+        ));
+
+        $cache->setItem($cacheKey , $viewModel);
+
+        return $viewModel;
+    }
+
     public function indexAction()
     {
         if (!$this->zfcUserAuthentication()->hasIdentity()) {
